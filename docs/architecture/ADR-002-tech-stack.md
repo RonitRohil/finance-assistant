@@ -93,18 +93,89 @@ answer = qa_chain.invoke("What was Reliance's revenue last quarter?")
 
 ---
 
-## LLM: Claude API (Anthropic)
+## LLM Strategy: Two-Phase Approach
 
-We're using Anthropic's Claude API. Specific models:
+We use different LLMs for development vs production. This keeps development completely free while ensuring production quality.
 
-- **claude-haiku-4-5**: Fast and cheap — use for simple stock lookups, news summaries, routine Q&A
-- **claude-sonnet-4-6**: Smarter — use for complex portfolio analysis, multi-stock comparisons, financial reasoning
+### Phase 1 (Development): Ollama — local, free, offline
 
-### Cost estimate for local use
-At haiku pricing, 1000 questions/month ≈ $1–2. Sonnet ≈ $5–10. Very manageable.
+**Ollama** runs open-source LLMs directly on your machine. No API key, no internet connection needed, no cost ever.
 
-### Why not OpenAI GPT-4?
-Claude has better reasoning on financial documents and is better at following structured output instructions. Also, you're already using Claude products — keeping consistency makes sense.
+**Environment**: Windows 11, 16GB RAM  
+**Recommended models** (in order of preference):
+
+| Model | Size on disk | RAM needed | Speed | Quality |
+|-------|-------------|------------|-------|---------|
+| `mistral:7b` | 4.1 GB | ~6 GB | Fast | Great for finance Q&A |
+| `llama3.1:8b` | 4.7 GB | ~7 GB | Fast | Excellent reasoning |
+| `llama3.2:3b` | 2.0 GB | ~3 GB | Very fast | Good for quick tests |
+
+**Recommended**: Start with `mistral:7b` — best balance of quality and speed for financial text.
+
+```bash
+# Install Ollama on Windows: download from https://ollama.com
+# Then pull the model (one-time download):
+ollama pull mistral
+
+# Verify it works:
+ollama run mistral "What is a P/E ratio?"
+```
+
+**LangChain integration** — Ollama uses the exact same interface as Claude:
+
+```python
+# Development (free, local, Ollama)
+from langchain_ollama import OllamaLLM
+llm = OllamaLLM(model="mistral", temperature=0)
+
+# Production (swap this one line, everything else stays identical)
+from langchain_anthropic import ChatAnthropic
+llm = ChatAnthropic(model="claude-haiku-4-5", temperature=0)
+```
+
+We handle this with an environment variable so switching is automatic:
+
+```python
+# app/core/llm.py
+import os
+from langchain_ollama import OllamaLLM
+from langchain_anthropic import ChatAnthropic
+
+def get_llm():
+    env = os.getenv("LLM_PROVIDER", "ollama")  # default to ollama
+    if env == "ollama":
+        return OllamaLLM(model=os.getenv("OLLAMA_MODEL", "mistral"), temperature=0)
+    elif env == "anthropic":
+        return ChatAnthropic(model=os.getenv("CLAUDE_MODEL", "claude-haiku-4-5"), temperature=0)
+    raise ValueError(f"Unknown LLM_PROVIDER: {env}")
+```
+
+`.env` file controls which LLM is active — no code changes needed:
+```env
+# .env (development)
+LLM_PROVIDER=ollama
+OLLAMA_MODEL=mistral
+
+# .env (production)
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+CLAUDE_MODEL=claude-haiku-4-5
+```
+
+### Phase 2+ (Production): Claude API (Anthropic)
+
+When deploying to cloud or sharing with family, switch to Claude API. Specific models:
+
+- **claude-haiku-4-5**: Fast and cheap — simple stock lookups, news summaries, routine Q&A
+- **claude-sonnet-4-6**: Smarter — complex portfolio analysis, multi-stock comparisons
+
+Cost estimate: 1000 questions/month on haiku ≈ $1–2. Very manageable.
+
+### Why Ollama over other free options?
+- **vs Groq free tier**: Groq has rate limits (30 req/min) that break scheduled ingestion jobs. Ollama is unlimited.
+- **vs Google Gemini free**: API key required, internet needed, privacy concern with financial data.
+- **vs Hugging Face inference**: Slower, rate-limited, internet-dependent.
+- **Ollama wins**: Truly offline, unlimited, fast enough on 16GB RAM, and teaches you how local LLMs work — a valuable skill.
 
 ---
 
@@ -172,10 +243,33 @@ Key libraries on top:
 
 ---
 
+## Windows-Specific Setup Notes
+
+Since we're on Windows, a few things are different from Linux/Mac guides you'll find online:
+
+```bash
+# Python virtual environment on Windows
+python -m venv venv
+venv\Scripts\activate          # NOT source venv/bin/activate
+
+# Running uvicorn
+uvicorn app.main:app --reload  # same command, works fine on Windows
+
+# ChromaDB works fine on Windows without Docker in Phase 1
+# Qdrant (Phase 2) needs Docker Desktop for Windows
+```
+
+Recommend installing **Git Bash** or **WSL2** if you want Linux-style commands. Either works — the code is identical.
+
+---
+
 ## Action Items
 
-- [ ] Initialize FastAPI project with pyproject.toml / requirements.txt
+- [x] Decide LLM strategy: Ollama (dev) → Claude API (production)
+- [ ] Install Ollama on Windows: https://ollama.com
+- [ ] Pull mistral model: `ollama pull mistral`
+- [ ] Initialize FastAPI project with requirements.txt
 - [ ] Set up Next.js app with TypeScript + Tailwind
-- [ ] Configure LangChain with Claude API key
-- [ ] Download sentence-transformers model locally
-- [ ] Set up Docker Compose for local dev
+- [ ] Configure LangChain with Ollama (get_llm() factory function)
+- [ ] Download sentence-transformers model locally (auto-downloads on first run)
+- [ ] Set up Docker Compose for local dev (optional in Phase 1)
