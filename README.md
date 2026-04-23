@@ -49,8 +49,8 @@ FinanceAssistant/
 - **Backend**: FastAPI (Python) — best AI/ML ecosystem
 - **Frontend**: Next.js (React) — full-stack dashboard
 - **Vector DB**: ChromaDB (Phase 1) → Qdrant (Phase 2+)
-- **LLM**: Claude API (Anthropic)
-- **Embeddings**: sentence-transformers (free, local)
+- **LLM**: Ollama / mistral:7b (dev, free, local) → Claude API (production)
+- **Embeddings**: sentence-transformers (free, local, no API needed)
 - **Data**: yfinance + nsepy + NewsAPI (free tier)
 
 See `docs/architecture/` for full reasoning behind every decision.
