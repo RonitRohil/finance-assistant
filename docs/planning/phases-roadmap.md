@@ -1,199 +1,194 @@
 # FinanceAssistant — Phases Roadmap
 
-**Last updated:** April 2026  
+**Last updated:** April 2026 (v2 — post brainstorming reprioritization)
 **Project start:** May 2026 (estimated)
+**Solo developer** — ~15–20 hrs/week available alongside job hunting
 
 ---
 
-## Overview
+## What Changed in v2 (Brainstorm-Driven Updates)
+
+| Item | Old Priority | New Priority | Reason |
+|------|-------------|-------------|--------|
+| Watchlist price alerts | Phase 2 | Phase 1 Sprint 4 | Highest daily-use feature, simple to build |
+| Expert/Simple conversation mode | Phase 3 | Phase 1 Sprint 4 | Family beta testers need this from day one |
+| Indian financial calendar as RAG source | Not planned | Phase 1 Sprint 3 | Static data, huge answer quality boost |
+| "Why is this stock moving?" compound query | Not planned | Phase 1 Sprint 4 | Killer demo feature, uses all RAG components |
+| Define supported stock universe (Nifty 500) | Not planned | Phase 1 Sprint 2 | Prevent sparse-data hallucinations on mid-caps |
+| Docker Compose setup | Phase 1 | Phase 2 | Adds Windows complexity, not needed locally |
+
+---
+
+## Now / Next / Later View
 
 ```
-Phase 1: Foundation (8–10 weeks)
-  ↓ RAG pipeline working, basic chat UI, stock Q&A, news ingestion
+NOW (Phase 1 — May–July 2026, 10 weeks, 5 sprints)
+  Foundation + killer demo feature working locally
 
-Phase 2: Intelligence (8–10 weeks)
-  ↓ Portfolio tracking, personal finance, smarter agents, better UI
+NEXT (Phase 2 — Aug–Oct 2026, 10 weeks)
+  Intelligence: personal finance, AI agents, Qdrant migration
 
-Phase 3: Scale & Share (ongoing)
-  ↓ Cloud deployment, multi-user, alerts, advanced analysis
+LATER (Phase 3 — Nov 2026+, ongoing)
+  Cloud deployment, real-time data, mutual funds, voice
 ```
 
 ---
 
-## Phase 1 — Foundation ("It works!")
+## Phase 1 — Foundation ("It works and wows")
 
-**Goal**: A working local app where you can chat with an AI about Indian stocks and get answers grounded in real data.
+**Goal**: A working local app where you can ask "Why is TCS falling today?" and get a grounded, cited answer. Family can use it. You use it daily.
 
-**Definition of Done for Phase 1**: You can ask "How has TCS performed this quarter?" and get an answer based on actual recent data — not hallucination.
+**Definition of Done**: The "Why is this stock moving?" feature works end-to-end with real data and citations. Expert/Simple mode toggle works. At least one family member has given feedback.
 
-### Milestones
+**Stock universe**: Nifty 500 only in Phase 1. If a user asks about a stock outside Nifty 500, the system clearly says "I have limited data on this stock" rather than hallucinating.
 
-#### M1.1 — Project Scaffold (Week 1–2)
-- [ ] Initialize FastAPI project with proper folder structure
-- [ ] Initialize Next.js frontend with TypeScript + Tailwind
-- [ ] Set up Docker Compose to run both services together
-- [ ] Configure Claude API key and test basic LLM call
-- [ ] Write Hello World RAG: one document, one question, one answer
+### Sprint 1 — Scaffold & Hello World RAG (Weeks 1–2)
+→ See `sprint-plans.md` for full detail
 
-**Deliverable**: Two services running locally. Can ask Claude a question.
+Key deliverables:
+- FastAPI backend running, health check works
+- Ollama (mistral) connected and responding
+- ChromaDB set up with first collection
+- "Hello World" RAG: one document, one question, one correct answer
+- Next.js frontend shell running at localhost:3000
 
-#### M1.2 — Data Pipeline (Week 2–3)
-- [ ] Install and test yfinance with 10 Indian stocks
-- [ ] Write `DataIngester` class: fetches stock data, formats as documents
-- [ ] Install sentence-transformers, generate first embeddings
-- [ ] Install ChromaDB, set up `stock_news` and `stock_data` collections
-- [ ] Write `VectorStore` class: insert documents, query similar documents
-- [ ] Test: embed 50 stock summaries, query "profitable tech stock"
+### Sprint 2 — Data Pipeline (Weeks 3–4)
+Key deliverables:
+- yfinance ingestion for Nifty 500 stocks
+- sentence-transformers embeddings working
+- ChromaDB populated with 500 stock summaries
+- NewsAPI ingestion + APScheduler running
+- Supported stock list documented (Nifty 500 only)
+- Sparse data detection: warn when < 3 documents retrieved
 
-**Deliverable**: ChromaDB populated with real Indian stock data.
+### Sprint 3 — RAG Chain + Indian Calendar (Weeks 5–6)
+Key deliverables:
+- Full LangChain RetrievalQA chain working
+- Indian financial calendar embedded as RAG source (RBI dates, F&O expiry, earnings season, budget)
+- `/api/chat` endpoint responding with citations
+- 20 test questions verified (pass/fail documented)
 
-#### M1.3 — RAG Chain (Week 3–4)
-- [ ] Build LangChain RetrievalQA chain connected to ChromaDB
-- [ ] Write system prompt for financial Q&A (grounded, cite sources)
-- [ ] Build `/api/ask` FastAPI endpoint
-- [ ] Test with 20 sample questions, check answer quality
-- [ ] Add source citations to responses (which documents were retrieved)
+### Sprint 4 — Portfolio + Power Features (Weeks 7–8)
+Key deliverables:
+- Portfolio CRUD (add/edit/delete holdings)
+- "Why is this stock moving today?" compound query working
+- Expert vs Simple conversation mode toggle
+- Watchlist with email alerts when price crosses target
+- Portfolio context injected into every RAG response
 
-**Deliverable**: Working RAG endpoint. Answers financial questions using real data.
-
-#### M1.4 — News Ingestion (Week 4–5)
-- [ ] Sign up for NewsAPI, write news fetcher
-- [ ] Write news processor: clean → chunk → embed → store
-- [ ] Schedule news ingestion with APScheduler (morning + evening)
-- [ ] Build news collection in ChromaDB with metadata (date, ticker, source)
-- [ ] Add news to RAG retrieval pipeline
-- [ ] Test: "What's the latest news about Infosys?" returns actual recent articles
-
-**Deliverable**: AI answers include current news context.
-
-#### M1.5 — Basic Portfolio (Week 5–6)
-- [ ] Design SQLite schema: stocks table, holdings table, transactions table
-- [ ] Build `/api/portfolio` CRUD endpoints (add/update/delete holdings)
-- [ ] Write portfolio calculator: current value, P&L, allocation %
-- [ ] Add portfolio context to RAG ("given my holdings: X shares of Y...")
-- [ ] Test: "How is my portfolio doing today?" returns actual P&L
-
-**Deliverable**: Portfolio tracking with manual entry works.
-
-#### M1.6 — Chat UI (Week 6–8)
-- [ ] Build chat interface in Next.js (message bubbles, input box)
-- [ ] Build stock dashboard page (price chart, key metrics)
-- [ ] Build portfolio overview page (allocation pie chart, P&L table)
-- [ ] Build news feed page (recent market news)
-- [ ] Connect all pages to FastAPI endpoints
-- [ ] Mobile-responsive layout
-
-**Deliverable**: A real usable app. Share with father/cousins to try.
-
-#### M1.7 — Polish & Testing (Week 8–10)
-- [ ] Add error handling everywhere (API down, rate limit hit, etc.)
-- [ ] Add loading states in UI
-- [ ] Write basic tests for RAG pipeline
-- [ ] Document setup instructions in README
-- [ ] Record a demo video for portfolio
-- [ ] Get 5 pieces of feedback from family beta users
-
-**Phase 1 Complete**: Working local app, production-quality code, great portfolio piece.
+### Sprint 5 — Chat UI + Polish + Beta (Weeks 9–10)
+Key deliverables:
+- Full Next.js chat UI with message history + source citations
+- Stock dashboard page (price chart + key metrics)
+- Portfolio overview page (P&L table + allocation pie)
+- Family beta: 3 users, 5 feedback items collected
+- Demo video recorded for portfolio
 
 ---
 
-## Phase 2 — Intelligence ("It's smart!")
+## Phase 2 — Intelligence ("It's smart")
 
-**Goal**: The app gets meaningfully smarter — it knows your portfolio deeply, understands your spending, and proactively surfaces insights rather than just answering questions.
+**Goal**: Proactive insights, personal finance understanding, and a smarter agent that decides what tools to call.
 
-**Trigger**: Phase 1 is complete and being used daily.
+**Trigger**: Phase 1 complete, app used daily, at least 1 family member using it.
 
-### Milestones
+### M2.1 — Personal Finance Module (Weeks 1–3)
+- PDF upload for bank/credit card statements (HDFC, SBI, ICICI formats)
+- Transaction categorization via LLM (food, rent, investment, EMI)
+- Spending dashboard: monthly breakdown, category trends
+- Savings goal tracker: "Am I on track to save ₹5L this year?"
+- RAG over personal spending: "How much on food vs investing last quarter?"
 
-#### M2.1 — Personal Finance Module (Week 1–3)
-- [ ] Build PDF upload for bank/credit card statements
-- [ ] Write statement parser (pdfplumber) for HDFC, SBI, ICICI formats
-- [ ] Categorize transactions (food, rent, investment, EMI, etc.) using Claude
-- [ ] Build spending dashboard: monthly breakdown, category trends
-- [ ] Add spending data to RAG: "How much did I spend on food vs investing?"
-- [ ] Build savings goal tracker
+### M2.2 — Mutual Funds Module (Weeks 2–4) ← moved up from Phase 3
+- AMFI NAV data ingestion (free, updated daily)
+- Track SIP investments and performance
+- Fund vs benchmark comparison (vs Nifty 50, category average)
+- "Which of my mutual funds is underperforming?" — RAG answer
+- Mutual funds likely more relevant to family than direct stocks
 
-#### M2.2 — AI Agents (Week 3–5)
-- [ ] Upgrade from simple RetrievalQA to LangChain Agent
-- [ ] Build tools the agent can call:
-  - `get_stock_price(ticker)` — real-time price
-  - `get_portfolio_performance()` — P&L calculation
-  - `search_news(query, date_range)` — filtered news search
-  - `compare_stocks(ticker1, ticker2)` — side-by-side comparison
-  - `get_fundamentals(ticker)` — P/E, revenue, debt
-- [ ] Let agent decide which tools to call based on the question
-- [ ] Test multi-step reasoning: "Should I buy more TCS or add Wipro to balance my tech exposure?"
+### M2.3 — AI Agents (Weeks 3–5)
+- Upgrade from RetrievalQA to LangChain Agent with tools:
+  - `get_stock_price(ticker)` — live price from yfinance
+  - `get_portfolio_performance()` — real-time P&L
+  - `search_news(query, date_range)` — filtered ChromaDB search
+  - `compare_stocks(ticker1, ticker2)` — side-by-side fundamentals
+  - `get_fundamentals(ticker)` — P/E, revenue, debt ratios
+  - `check_calendar(date_range)` — upcoming RBI/results events
+- Agent decides which tools to call; multi-step reasoning enabled
+- Demo: "Should I add TCS or Wipro given my current tech exposure?"
 
-#### M2.3 — Advanced Portfolio Analytics (Week 5–6)
-- [ ] Portfolio vs benchmark comparison (vs Nifty 50, Nifty IT)
-- [ ] Sector allocation analysis
-- [ ] Correlation analysis between holdings
-- [ ] Dividend tracking and projected income
-- [ ] Tax loss harvesting suggestions (basic)
+### M2.4 — Advanced Portfolio Analytics (Weeks 5–6)
+- Portfolio vs benchmark (Nifty 50, Nifty IT, Nifty Bank)
+- Sector allocation analysis + overexposure warnings
+- Dividend tracking and projected annual income
+- Tax implications: STCG vs LTCG calculator (buy/sell date aware)
+- "What-If" simulator: "What if I had bought 100 TCS shares 6 months ago?"
 
-#### M2.4 — Migrate to Qdrant (Week 6–7)
-- [ ] Set up Qdrant in Docker
-- [ ] Migrate all ChromaDB data to Qdrant
-- [ ] Enable payload filtering (retrieve news only for specific date ranges, tickers)
-- [ ] Upgrade embeddings to OpenAI text-embedding-ada-002 (better quality)
-- [ ] Re-embed all documents
+### M2.5 — Infrastructure Upgrades (Weeks 6–8)
+- Migrate ChromaDB → Qdrant (Docker on Windows)
+- Upgrade embeddings: sentence-transformers → OpenAI text-embedding-3-small
+- Migrate SQLite → PostgreSQL (Supabase free tier)
+- Add Alembic for DB migrations
+- Basic user authentication (for family access)
+- Conversational memory (remember previous messages in session)
 
-#### M2.5 — Migrate DB to PostgreSQL (Week 7)
-- [ ] Set up PostgreSQL in Docker
-- [ ] Migrate SQLite schema to PostgreSQL
-- [ ] Add Alembic for database migrations
-- [ ] Add basic user authentication (for family access)
-
-#### M2.6 — UX Improvements (Week 8–10)
-- [ ] Conversational memory (remember previous messages in session)
-- [ ] Suggested follow-up questions
-- [ ] Export reports as PDF
-- [ ] Dark mode
-- [ ] Watchlist with price alerts (email notification)
-
----
-
-## Phase 3 — Scale & Share ("It's a product!")
-
-**Goal**: Deploy to cloud so family can use it from anywhere. Add features that make it meaningfully better than existing tools.
-
-**Trigger**: Phase 2 is complete and family is actively using it.
-
-### Milestones
-
-#### M3.1 — Cloud Deployment
-- [ ] Choose cloud provider: Railway, Render, or AWS (free tiers)
-- [ ] Deploy FastAPI on Railway or Render
-- [ ] Deploy Next.js on Vercel (free)
-- [ ] Move PostgreSQL to Supabase (free 512MB)
-- [ ] Move Qdrant to Qdrant Cloud (free 1GB)
-- [ ] Set up CI/CD with GitHub Actions
-
-#### M3.2 — Real-Time Data
-- [ ] Integrate Angel One SmartAPI or Upstox for real-time prices
-- [ ] WebSocket streaming for live portfolio value updates
-- [ ] Real-time market alerts (price crosses target, news about watchlist)
-
-#### M3.3 — Advanced AI Features
-- [ ] Multi-document comparison: "Compare Q4 results for TCS vs Infosys vs Wipro"
-- [ ] Earnings call transcript ingestion and Q&A
-- [ ] Technical analysis signals (RSI, MACD via ta-lib)
-- [ ] "Explain this in simple terms" mode for family members
-
-#### M3.4 — Mutual Funds Module
-- [ ] AMFI NAV data ingestion (free)
-- [ ] Track SIP investments
-- [ ] Fund vs benchmark comparison
-- [ ] Switch/redeem recommendations
-
-#### M3.5 — Voice Interface (Stretch Goal)
-- [ ] Speech-to-text input (Whisper API)
-- [ ] Text-to-speech for answers
-- [ ] "Hey Finance, how's my portfolio today?"
+### M2.6 — UX Polish (Weeks 8–10)
+- Suggested follow-up questions after each answer
+- Export reports as PDF
+- Dark mode
+- Mobile-responsive improvements
+- Docker Compose setup (now makes sense, post-complexity)
 
 ---
 
-## Decision Log (update when decisions change)
+## Phase 3 — Scale & Share ("It's a product")
+
+**Goal**: Cloud deployment, real-time data, anything that makes it meaningfully better than existing retail tools.
+
+**Trigger**: Phase 2 complete, family actively using it, clear value proposition proven.
+
+### M3.1 — Cloud Deployment
+- FastAPI → Railway or Render (free tier)
+- Next.js → Vercel (free)
+- PostgreSQL → Supabase (512MB free)
+- Qdrant → Qdrant Cloud (1GB free)
+- CI/CD with GitHub Actions
+- Custom domain (optional)
+
+### M3.2 — Real-Time Data
+- Angel One SmartAPI or Upstox (free with demat account)
+- WebSocket streaming for live portfolio value
+- Real-time price alerts (upgrade from email to push notifications)
+- Intraday chart support
+
+### M3.3 — Advanced AI Features
+- Earnings call transcript ingestion (NSE publishes these)
+- Technical analysis signals: RSI, MACD, Bollinger Bands (via `ta-lib`)
+- Multi-document comparison: "Compare Q4 for TCS vs Infosys vs Wipro"
+- Sector rotation signals: "Which sectors are institutional money moving into?"
+
+### M3.4 — Voice Interface (Stretch)
+- Speech-to-text: Whisper API (local via `whisper.cpp` — free)
+- Text-to-speech for answers
+- "Hey Finance, how's my portfolio?"
+
+---
+
+## Risks & Mitigations (Updated)
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| yfinance breaks (Yahoo changes API) | Medium | High | nsepy as backup; document alternative tickers |
+| NewsAPI 100 req/day not enough | Medium | Medium | Batch queries; GNews as backup source |
+| Ollama (mistral) gives weak financial answers | Medium | Medium | Upgrade to llama3.1:8b; switch to Claude API if quality is blocking |
+| ChromaDB sparse for mid-cap stocks | High | Medium | Nifty 500 scope limit + explicit "limited data" warning |
+| Family members confused by chat UI | High | High | Expert/Simple toggle in Phase 1 Sprint 4, not Phase 3 |
+| Windows-specific library install issues | Medium | Low | Document fixes in claude-code-setup-prompt.md troubleshooting |
+| Scope creep (too many features in Phase 1) | High | High | Sprint plans enforce hard P0/P1/P2 tiers; cut P2 before P0 |
+
+---
+
+## Decision Log (chronological)
 
 | Date | Decision | Reason |
 |------|----------|--------|
@@ -201,16 +196,9 @@ Phase 3: Scale & Share (ongoing)
 | Apr 2026 | Use yfinance as primary data source | Free, reliable, covers NSE/BSE well |
 | Apr 2026 | FastAPI over Django/Flask | Best Python AI/ML ecosystem, async |
 | Apr 2026 | sentence-transformers over OpenAI embeddings | Free, local, no API cost |
-| Apr 2026 | Claude API (Anthropic) as LLM | Best reasoning, we already use Claude |
-
----
-
-## Risks & Mitigations
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| yfinance breaks (Yahoo changes API) | Medium | High | Keep nsepy as backup; document alternative |
-| NewsAPI 100 req/day not enough | Medium | Medium | Batch queries; add GNews as backup source |
-| ChromaDB performance degrades | Low | Medium | Migration to Qdrant already planned (Phase 2) |
-| Claude API costs run high | Low | Low | Use Haiku for cheap queries, Sonnet only for complex analysis |
-| Indian broker API requires KYC delay | Medium | Low | Phase 2 feature; yfinance covers us until then |
+| Apr 2026 | Ollama (mistral:7b) for dev LLM | No free Anthropic API credits; Ollama is truly free |
+| Apr 2026 | Nifty 500 scope for Phase 1 | Prevent hallucinations from sparse mid-cap data |
+| Apr 2026 | Move watchlist alerts to Phase 1 | Highest daily-use value, low build cost |
+| Apr 2026 | Move Expert/Simple mode to Phase 1 | Family beta in Phase 1 requires it |
+| Apr 2026 | Move mutual funds to Phase 2 | More relevant to family than direct stocks |
+| Apr 2026 | Defer Docker Compose to Phase 2 | Windows complexity not worth it during initial build |
