@@ -19,6 +19,7 @@ class StockInfoResponse(BaseModel):
     ticker: str
     currentPrice: Optional[float] = None
     previousClose: Optional[float] = None
+    change_pct: Optional[float] = None
     open: Optional[float] = None
     high: Optional[float] = None
     low: Optional[float] = None
