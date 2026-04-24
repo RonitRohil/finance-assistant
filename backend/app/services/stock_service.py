@@ -27,10 +27,17 @@ def get_stock_info(ticker: str) -> dict[str, Any]:
 
         info = stock.info or {}
 
+        current_price = info.get("currentPrice", hist["Close"].iloc[-1] if not hist.empty else None)
+        previous_close = info.get("previousClose", None)
+        change_pct = None
+        if current_price is not None and previous_close:
+            change_pct = round((current_price - previous_close) / previous_close * 100, 2)
+
         return {
             "ticker": ticker,
-            "currentPrice": info.get("currentPrice", hist["Close"].iloc[-1] if not hist.empty else None),
-            "previousClose": info.get("previousClose", None),
+            "currentPrice": current_price,
+            "previousClose": previous_close,
+            "change_pct": change_pct,
             "open": hist["Open"].iloc[-1] if not hist.empty else None,
             "high": hist["High"].iloc[-1] if not hist.empty else None,
             "low": hist["Low"].iloc[-1] if not hist.empty else None,

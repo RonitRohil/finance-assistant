@@ -1,8 +1,8 @@
 import logging
 from typing import Any
 
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import PromptTemplate
 
 from app.core.llm import get_llm
 from app.core.vectorstore import get_vectorstore
@@ -18,60 +18,38 @@ Instructions:
 4. Be factual and avoid speculation
 5. For stock recommendations, include relevant metrics like P/E ratio, market cap, dividend yield
 
-If the user asks about a specific stock, provide:
-- Current price
-- Performance metrics
-- Risk assessment based on available data
-- Any recent news or events"""
+Context:
+{context}
+
+Question: {question}
+
+Answer:"""
 
 
-def get_rag_chain(collection_name: str = "stock_news"):
-    """Create a RAG chain for answering finance questions."""
-    llm = get_llm()
-    vectorstore = get_vectorstore(collection_name)
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
-
-    prompt = PromptTemplate(
-        template=SYSTEM_PROMPT
-        + "\n\nContext documents:\n{context}\n\nQuestion: {question}",
-        input_variables=["context", "question"],
-    )
-
-    chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=retriever,
-        return_source_documents=True,
-        chain_type_kwargs={"prompt": prompt},
-    )
-
-    return chain
+def _format_docs(docs: list) -> str:
+    return "\n\n".join(doc.page_content for doc in docs)
 
 
 async def answer_question(
     question: str, collection_name: str = "stock_news"
 ) -> dict[str, Any]:
-    """
-    Answer a question using the RAG chain.
-
-    Returns:
-        dict with "answer" and "sources" keys
-    """
     try:
-        chain = get_rag_chain(collection_name)
-        result = chain.invoke(question)
+        llm = get_llm()
+        vectorstore = get_vectorstore(collection_name)
+        retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
 
-        sources = []
-        if result.get("source_documents"):
-            for doc in result["source_documents"]:
-                sources.append(
-                    {
-                        "content": doc.page_content,
-                        "metadata": doc.metadata,
-                    }
-                )
+        docs = retriever.invoke(question)
+        context = _format_docs(docs)
 
-        return {"answer": result["result"], "sources": sources}
+        prompt = PromptTemplate.from_template(SYSTEM_PROMPT)
+        chain = prompt | llm | StrOutputParser()
+        answer = chain.invoke({"context": context, "question": question})
+
+        sources = [
+            {"content": doc.page_content, "metadata": doc.metadata}
+            for doc in docs
+        ]
+        return {"answer": answer, "sources": sources}
 
     except Exception as e:
         logger.error(f"Error answering question: {e}")

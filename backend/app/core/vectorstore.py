@@ -1,5 +1,8 @@
 import logging
+import os
 from typing import Any, Optional
+
+os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
 
 from langchain_chroma import Chroma
 
