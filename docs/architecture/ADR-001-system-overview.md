@@ -126,8 +126,10 @@ User uploads or connects bank statements. System answers: *"How much did I spend
 ## Action Items
 
 - [x] Define system overview and data flow
-- [ ] Set up FastAPI project scaffold (Phase 1 dev)
-- [ ] Set up ChromaDB locally
-- [ ] Build first ingestion pipeline (yfinance → embeddings → ChromaDB)
-- [ ] Build first RAG chain (query → retrieve → Claude answer)
-- [ ] Build minimal Next.js chat UI
+- [x] Set up FastAPI project scaffold (Phase 1 dev) — **Sprint 1 ✅ confirmed working on Windows 11**
+- [x] Set up ChromaDB locally — **Sprint 1 ✅ `stock_news` collection live, 3 BusinessLine articles embedded**
+- [x] Build first ingestion pipeline (NewsAPI → embeddings → ChromaDB) — **Sprint 1 ✅ `/api/news/ingest` working end-to-end**
+- [x] Build first RAG chain (query → retrieve → Mistral/Ollama answer) — **Sprint 1 ✅ `/api/chat` returning cited answers with real sources**
+- [ ] Build yfinance ingestion pipeline (Nifty 500 bulk ingest) — Sprint 2
+- [ ] Add APScheduler for automated daily ingestion — Sprint 2
+- [ ] Build minimal Next.js chat UI — Sprint 5
